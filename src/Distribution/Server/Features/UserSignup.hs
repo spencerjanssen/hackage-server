@@ -307,7 +307,7 @@ userSignupFeature :: ServerEnv
                   -> StateComponent AcidState SignupResetTable
                   -> Templates
                   -> UserSignupFeature
-userSignupFeature ServerEnv{serverBaseURI, serverCron}
+userSignupFeature ServerEnv{serverBaseURI, serverCron, serverSendMail}
                   UserFeature{..} UserDetailsFeature{..}
                   UploadFeature{uploadersGroup} signupResetState templates
   = UserSignupFeature {..}
@@ -496,8 +496,7 @@ userSignupFeature ServerEnv{serverBaseURI, serverCron}
 
         updateAddSignupResetInfo nonce signupInfo
 
-        liftIO $ renderSendMail mail --TODO: if we need any configuration of
-                                     -- sendmail stuff, has to go here
+        liftIO $ serverSendMail mail
 
         resp 202 $ toResponse $
           templateConfirmation
@@ -625,8 +624,7 @@ userSignupFeature ServerEnv{serverBaseURI, serverCron}
 
         updateAddSignupResetInfo nonce resetInfo
 
-        liftIO $ renderSendMail mail --TODO: if we need any configuration of
-                                     -- sendmail stuff, has to go here
+        liftIO $ serverSendMail mail
 
         resp 202 $ toResponse $
           templateConfirmation

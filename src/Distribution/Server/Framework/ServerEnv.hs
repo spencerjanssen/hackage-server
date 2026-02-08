@@ -17,6 +17,7 @@ import Happstack.Server.Response (movedPermanently, toResponse)
 import Happstack.Server.Types (HeaderPair(..), Response, rqHeaders, rqQuery, rqUri)
 
 import qualified Hackage.Security.Util.Path as Sec
+import Network.Mail.Mime (Mail)
 
 -- | The internal server environment as used by 'HackageFeature's.
 --
@@ -73,7 +74,11 @@ data ServerEnv = ServerEnv {
     -- increasing the time taken to update the cache we can push this further.
     serverCacheDelay :: Int,
 
-    serverVerbosity  :: Verbosity
+    serverVerbosity  :: Verbosity,
+
+    -- | Send an email message. Typically `renderSendMail` from `Network.Mail.Mime`,
+    -- but can be overridden for testing.
+    serverSendMail :: Mail -> IO ()
 }
 
 getHost :: ServerMonad m => m (Maybe BS.ByteString)

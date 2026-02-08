@@ -206,6 +206,7 @@ data RunFlags = RunFlags {
     flagRunTemp            :: Flag Bool,
     flagRunCacheDelay      :: Flag String,
     flagRunLiveTemplates   :: Flag Bool,
+    flagRunLogEmailToStderr :: Flag Bool,
     -- Online backup flags
     flagRunBackupOutputDir :: Flag FilePath,
     flagRunBackupLinkBlobs :: Flag Bool,
@@ -226,6 +227,7 @@ defaultRunFlags = RunFlags {
     flagRunTemp            = Flag False,
     flagRunCacheDelay      = NoFlag,
     flagRunLiveTemplates   = Flag False,
+    flagRunLogEmailToStderr = Flag False,
     flagRunBackupOutputDir = Flag "backups",
     flagRunBackupLinkBlobs = Flag False,
     flagRunBackupScrubbed  = Flag False
@@ -311,6 +313,10 @@ runCommand =
           "Do not cache templates, for quicker feedback during development."
           flagRunLiveTemplates (\v flags -> flags { flagRunLiveTemplates = v })
           (noArg (Flag True))
+      , option [] ["log-email-to-stderr"]
+          "Write emails to stderr rather than sending them, for development use."
+          flagRunLogEmailToStderr (\v flags -> flags { flagRunLogEmailToStderr = v })
+          (noArg (Flag False))
       ]
 
 runAction :: RunFlags -> IO ()
@@ -340,12 +346,14 @@ runAction opts = do
                         confTmpDir     = tmpDir,
                         confCacheDelay = cacheDelay,
                         confLiveTemplates = liveTemplates,
-                        confVerbosity  = verbosity
+                        confVerbosity  = verbosity,
+                        confReallySendMail = not logEmailToStderr
                     }
         outputDir = fromFlag (flagRunBackupOutputDir opts)
         linkBlobs = fromFlag (flagRunBackupLinkBlobs opts)
         scrubbed  = fromFlag (flagRunBackupScrubbed  opts)
         liveTemplates = fromFlag (flagRunLiveTemplates opts)
+        logEmailToStderr = fromFlag (flagRunLogEmailToStderr opts)
 
     checkBlankServerState =<< Server.hasSavedState config
     checkStaticDir staticDir (flagRunStaticDir opts)

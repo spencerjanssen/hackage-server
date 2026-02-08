@@ -600,7 +600,9 @@ userNotifyFeature UserFeature{..}
   = UserNotifyFeature {..}
 
   where
-    ServerEnv {serverCron} = userFeatureServerEnv
+    -- todo, why does UserFeature carry a separate serverenv. Should userNotifyFeature get a separate
+    -- ServerEnv argument?
+    ServerEnv {serverCron, serverSendMail} = userFeatureServerEnv
     userNotifyFeatureInterface = (emptyHackageFeature "user-notify") {
         featureDesc      = "Notifications to users on metadata updates."
       , featureResources = [userNotifyResource] -- TODO we can add json features here for updating prefs
@@ -864,8 +866,7 @@ userNotifyFeature UserFeature{..}
 
     sendNotifyEmailAndDelay :: Mail -> IO ()
     sendNotifyEmailAndDelay email = do
-      -- TODO: if we need any configuration of sendmail stuff, has to go here
-      renderSendMail email
+      serverSendMail email
 
       -- delay sending out emails, to avoid spamming people if we accidentally
       -- send out too many emails

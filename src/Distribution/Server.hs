@@ -58,6 +58,8 @@ import Control.Exception.Lifted as Lifted
 import qualified Hackage.Security.Util.Path as Sec
 
 import Paths_hackage_server (getDataDir)
+import Network.Mail.Mime (renderSendMail)
+import System.IO (hPrint, stderr)
 
 
 data ListenOn = ListenOn {
@@ -75,7 +77,8 @@ data ServerConfig = ServerConfig {
   confStaticDir :: FilePath,
   confTmpDir    :: FilePath,
   confCacheDelay:: Int,
-  confLiveTemplates :: Bool
+  confLiveTemplates :: Bool,
+  confReallySendMail :: Bool
 } deriving (Show)
 
 confDbStateDir, confBlobStoreDir :: ServerConfig -> FilePath
@@ -108,7 +111,8 @@ defaultServerConfig = do
     confStaticDir = dataDir,
     confTmpDir    = "state" </> "tmp",
     confCacheDelay= 0,
-    confLiveTemplates = False
+    confLiveTemplates = False,
+    confReallySendMail = True
   }
 
 data Server = Server {
@@ -128,7 +132,7 @@ hasSavedState = doesDirectoryExist . confDbStateDir
 mkServerEnv :: ServerConfig -> IO ServerEnv
 mkServerEnv config@(ServerConfig verbosity hostURI userContentURI requiredBaseHostHeader _
                                     stateDir _ tmpDir
-                                    cacheDelay liveTemplates) = do
+                                    cacheDelay liveTemplates reallySendMail) = do
     createDirectoryIfMissing False stateDir
     let blobStoreDir  = confBlobStoreDir   config
         staticDir     = confStaticFilesDir config
@@ -153,7 +157,10 @@ mkServerEnv config@(ServerConfig verbosity hostURI userContentURI requiredBaseHo
             serverBaseURI       = hostURI,
             serverUserContentBaseURI = userContentURI,
             serverRequiredBaseHostHeader = requiredBaseHostHeader,
-            serverVerbosity     = verbosity
+            serverVerbosity     = verbosity,
+            serverSendMail      = if reallySendMail
+                                    then renderSendMail
+                                    else hPrint stderr . show
          }
     return env
 

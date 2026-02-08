@@ -59,6 +59,7 @@ serverRunningArgs =
   , "--base-uri", "http://127.0.0.1:" <> show testPort
   , "--user-content-uri", "http://localhost:" <> show testPort
   , "--required-base-host-header", "127.0.0.1:" <> show testPort
+  , "--log-email-to-stderr"
   ]
 
 waitForServer :: IO ()
